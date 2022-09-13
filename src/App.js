@@ -1,92 +1,89 @@
+import React, { useState } from "react";
+import { nanoid } from "nanoid";
+import Todo from "./components/Todo";
+import Form from "./components/Form";
+import FilterButton from "./components/FilterButton";
+
+const FILTER_MAP = {
+  All: () => true,
+  Active: (task) => !task.completed,
+  Completed: (task) => task.completed
+};
+
+const FILTER_NAMES = Object.keys(FILTER_MAP);
+
 function App(props) {
+  const [ tasks, setTasks ] = useState(props.tasks);
+  const [ filter, setFilter ] = useState('All');
+
+  function addTask(name) {
+    const newTask = { id: `todo-${nanoid()}`, name, completed: false };
+    setTasks([...tasks, newTask]);
+  }
+
+  function toggleCompletedTask(id) {
+    const updatedTasks = tasks.map((task) => {
+      if (id === task.id) {
+        return { ...task, completed: !task.completed }
+      }
+      return task;
+    });
+    setTasks(updatedTasks);
+  }
+
+  function editTask(id, newName) {
+    const editedTask = tasks.map((task) => {
+      if (id === task.id) {
+        return {...task, name: newName}
+      }
+      return task;
+    });
+    setTasks(editedTask);
+  }
+
+  function deleteTask(id) {
+    const remainingTasks = tasks.filter((task) => id !== task.id);
+    setTasks(remainingTasks);
+  }
+
+  const taskList = tasks
+  .filter(FILTER_MAP[filter])
+  .map((task) => (
+  <Todo 
+  id={task.id} 
+  name={task.name} 
+  completed={task.completed} 
+  key={task.id} 
+  toggleCompletedTask={toggleCompletedTask} 
+  deleteTask={deleteTask}
+  editTask={editTask} />));
+
+  const filterList = FILTER_NAMES.map((name) => (
+    <FilterButton key={name} name={name} isPressed={name === filter}
+    setFilter={setFilter}
+    />
+  ));
+
+  const taskAmount = taskList.length !== 1 ? 'tasks' : 'task';
+  const headingText = `${taskList.length} ${taskAmount} remaining`;
+
   return (
     <div className="todoapp">
       <h1>ToDo App</h1>
-      <form>
-        <h2 className="label-wrapper">
-          <label htmlFor="todo-input" className="label-lg">
-            What do you need to do today?
-          </label>
-        </h2>
-        <input
-        type="text"
-        id="todo-input"
-        className="input input-lg"
-        name="text"
-        autoComplete="off"
-        />
-        <button type="submit" className="btn btn-primary btn-lg">
-          Add
-        </button>
-      </form>
+        <Form addTask={addTask} />
 
       <div className="filters btn-group">
-        <button type="button" className="btn toggle-button" aria-pressed="true">
-          <span>All</span>
-        </button>
-        <button type="button" className="btn toggle-button" aria-pressed="false">
-          <span>Active</span>
-        </button>
-        <button type="button" className="btn toggle-button" aria-pressed="false">
-          <span>Complete</span>
-        </button>
+        {filterList}
       </div>
 
       <h2 id="list-heading">
-        3 tasks remaining
+        {headingText}
       </h2>
       <ul
       className="todo-list"
       aria-labelledby="list-heading"
       >
-        <li className="todo-small-list">
-          <div className="c-cb">
-            <input id="todo-1" type="checkbox" defaultChecked={true} />
-            <label className="todo-label" htmlFor="todo-1">
-              Eat
-            </label>
-          </div>
-          <div className="btn-group">
-            <button type="button" className="btn">
-              Edit
-            </button>
-            <button type="button" className="btn btn-delete">
-              Delete
-            </button>
-          </div>
-        </li>
-        <li className="todo-small-list">
-          <div className="c-cb">
-            <input id="todo-2" type="checkbox" defaultChecked={false} />
-            <label className="todo-label" htmlFor="todo-2">
-              Sleep
-            </label>
-          </div>
-          <div className="btn-group">
-            <button type="button" className="btn">
-              Edit
-            </button>
-            <button type="button" className="btn btn-delete">
-              Delete
-            </button>
-          </div>
-        </li>
-        <li className="todo-small-list">
-          <div className="c-cb">
-            <input id="todo-3" type="checkbox" defaultChecked={false} />
-            <label className="todo-label" htmlFor="todo-3">
-              Read
-            </label>
-          </div>
-          <div className="btn-group">
-            <button type="button" className="btn">
-              Edit
-            </button>
-            <button type="button" className="btn btn-delete">
-              Delete
-            </button>
-          </div>
-        </li>
+        {taskList}
       </ul>
     </div>
   );
